@@ -1,5 +1,6 @@
 const LoginRouter = require('./login-router');
 const MissingParamError = require('../helpers/missing-param-error');
+const UnauthorizedError = require('../helpers/unauthorized-error');
 
 // Design Pattern Factory.
 const makeSut = () => {
@@ -79,6 +80,8 @@ describe('Login Router', () => {
     expect(authUseCaseSpy.password).toBe(httpRequest.body.password);
   });
 
+  // 401 quando o sistema não identifica o usuário.
+  // 403 quando o sistema identifica o usuário, mas ele não ter permissão para executar a ação.
   test('Should return 401 when invalid credentials are provided', () => {
     const { sut } = makeSut();
     const httpRequest = {
@@ -90,5 +93,6 @@ describe('Login Router', () => {
 
     const httpResponse = sut.route(httpRequest);
     expect(httpResponse.statusCode).toBe(401);
+    expect(httpResponse.body).toEqual(new UnauthorizedError());
   });
 });

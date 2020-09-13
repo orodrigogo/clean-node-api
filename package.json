@@ -6,6 +6,17 @@
   "scripts": {
     "test": "jest"
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix",
+      "git add"
+    ]
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/rodrigorgtic/clean-node-api.git"
@@ -17,8 +28,11 @@
   },
   "homepage": "https://github.com/rodrigorgtic/clean-node-api#readme",
   "devDependencies": {
+    "eslint": "^7.9.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-plugin-import": "^2.22.0",
     "husky": "^4.2.5",
     "jest": "^26.4.2",
-    "lint-staged": "^10.2.13"
+    "lint-staged": "^10.3.0"
   }
 }

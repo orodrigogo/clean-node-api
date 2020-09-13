@@ -1,5 +1,6 @@
 const HttpResponse = require('../helpers/http-response');
 
+// Design Pattern Adapter.
 class LoginRouter {
   route(httpRequest) {
     if (!httpRequest || !httpRequest.body) {

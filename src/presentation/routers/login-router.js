@@ -12,6 +12,7 @@ class LoginRouter {
     }
 
     const { email, password } = httpRequest.body;
+
     if (!email) {
       return HttpResponse.badRequest('email');
     }
@@ -21,9 +22,11 @@ class LoginRouter {
 
     const accessToken = this.authUseCase.auth(email, password);
 
-    if (!accessToken) { return HttpResponse.unauthorizedError(); }
+    if (!accessToken) {
+      return HttpResponse.unauthorizedError();
+    }
 
-    return HttpResponse.ok();
+    return HttpResponse.ok({ accessToken });
   }
 }
 

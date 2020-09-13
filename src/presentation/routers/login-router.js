@@ -1,10 +1,12 @@
 const HttpResponse = require('../helpers/http-response');
 const MissingParamError = require('../helpers/missing-param-error');
+const InvalidParamError = require('../helpers/invalid-param-error');
 
 // Design Pattern Adapter.
 class LoginRouter {
-  constructor(authUseCase) {
+  constructor(authUseCase, emailValidator) {
     this.authUseCase = authUseCase;
+    this.emailValidator = emailValidator;
   }
 
   async route(httpRequest) {
@@ -13,6 +15,9 @@ class LoginRouter {
 
       if (!email) {
         return HttpResponse.badRequest(new MissingParamError('email'));
+      }
+      if (!this.emailValidator.isValid(email)) {
+        return HttpResponse.badRequest(new InvalidParamError('email'));
       }
       if (!password) {
         return HttpResponse.badRequest(new MissingParamError('password'));

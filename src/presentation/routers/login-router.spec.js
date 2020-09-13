@@ -10,11 +10,17 @@ const makeSut = () => {
     auth(email, password) {
       this.email = email;
       this.password = password;
+
+      return this.accesToken;
     }
   }
 
   // Dependency Injector
   const authUseCaseSpy = new AuthUseCaseSpy();
+
+  // Set default token case route not set acess token.
+  authUseCaseSpy.accesToken = 'valid_token';
+
   const sut = new LoginRouter(authUseCaseSpy);
 
   return {
@@ -84,7 +90,10 @@ describe('Login Router', () => {
   // 401 quando o sistema não identifica o usuário.
   // 403 quando o sistema identifica o usuário, mas ele não ter permissão para executar a ação.
   test('Should return 401 when invalid credentials are provided', () => {
-    const { sut } = makeSut();
+    const { sut, authUseCaseSpy } = makeSut();
+
+    authUseCaseSpy.accesToken = null;
+
     const httpRequest = {
       body: {
         email: 'invalid_email@email.com',
@@ -95,6 +104,21 @@ describe('Login Router', () => {
     const httpResponse = sut.route(httpRequest);
     expect(httpResponse.statusCode).toBe(401);
     expect(httpResponse.body).toEqual(new UnauthorizedError());
+  });
+
+  test('Should return 200 when valid credentials are provided', () => {
+    const { sut } = makeSut();
+
+    const httpRequest = {
+      body: {
+        email: 'valid_email@email.com',
+        password: 'valid_password',
+      },
+    };
+
+    const httpResponse = sut.route(httpRequest);
+
+    expect(httpResponse.statusCode).toBe(200);
   });
 
   test('Should return 500 if no AuthUseCase is provided', () => {

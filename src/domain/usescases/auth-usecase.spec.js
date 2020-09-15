@@ -77,15 +77,38 @@ const makeLoadUserByEmailRepositoryWithError = () => {
   return LoadUserByEmailRepositorySpy;
 };
 
+const makeUpdateAccessTokenRepository = () => {
+  class UpdateAccessTokenRepositorySpy {
+    async update(userId, accessToken) {
+      this.userId = userId;
+      this.accessToken = accessToken;
+    }
+  }
+
+  return new UpdateAccessTokenRepositorySpy();
+};
+
+const makeUpdateAccessTokenRepositoryWithError = () => {
+  class UpdateAccessTokenRepositorySpy {
+    async update() {
+      throw new Error();
+    }
+  }
+
+  return new UpdateAccessTokenRepositorySpy();
+};
+
 const makeSut = () => {
   const encrypterSpy = makeEncrypter();
   const loadUserByEmailRepositorySpy = makeLoadUserByEmailRepository();
   const tokenGeneratorSpy = makeTokenGenerator();
+  const updateAccessTokenRepositorySpy = makeUpdateAccessTokenRepository();
 
   const sut = new AuthUseCase({
     loadUserByEmailRepository: loadUserByEmailRepositorySpy,
     encrypter: encrypterSpy,
     tokenGenerator: tokenGeneratorSpy,
+    updateAccessTokenRepository: updateAccessTokenRepositorySpy,
   });
 
   return {
@@ -93,6 +116,7 @@ const makeSut = () => {
     loadUserByEmailRepositorySpy,
     encrypterSpy,
     tokenGeneratorSpy,
+    updateAccessTokenRepositorySpy,
   };
 };
 
@@ -155,10 +179,24 @@ describe('Auth UseCase', () => {
     expect(accessToken).toBeTruthy();
   });
 
+  test('Should call UpdateAccessTokenRepository with corret values', async () => {
+    const {
+      sut,
+      loadUserByEmailRepositorySpy,
+      updateAccessTokenRepositorySpy,
+      tokenGeneratorSpy,
+    } = makeSut();
+
+    await sut.auth('valid@email.com', 'valid_password');
+    expect(updateAccessTokenRepositorySpy.userId).toBe(loadUserByEmailRepositorySpy.user.id);
+    expect(updateAccessTokenRepositorySpy.accessToken).toBe(tokenGeneratorSpy.accessToken);
+  });
+
   test('Should throw if invalid dependencies are provided', async () => {
     const invalid = {};
     const loadUserByEmailRepository = makeLoadUserByEmailRepository();
     const encrypter = makeEncrypter();
+    const tokenGenerator = makeTokenGenerator();
 
     const suts = [].concat(
       new AuthUseCase(),
@@ -189,7 +227,13 @@ describe('Auth UseCase', () => {
       new AuthUseCase({
         loadUserByEmailRepository,
         encrypter,
-        tokenGenerator: makeTokenGenerator(),
+        tokenGenerator,
+      }),
+      new AuthUseCase({
+        loadUserByEmailRepository,
+        encrypter,
+        tokenGenerator,
+        updateAccessTokenRepository: invalid,
       }),
     );
 
@@ -203,6 +247,7 @@ describe('Auth UseCase', () => {
   test('Should throw if dependencies throws', async () => {
     const loadUserByEmailRepository = makeLoadUserByEmailRepository();
     const encrypter = makeEncrypter();
+    const tokenGenerator = makeTokenGenerator();
 
     const suts = [].concat(
       new AuthUseCase({
@@ -213,12 +258,15 @@ describe('Auth UseCase', () => {
         encrypter: makeEncrypterWithError(),
       }),
       new AuthUseCase({
-        loadUserByEmailRepository: makeLoadUserByEmailRepositoryWithError(),
+        loadUserByEmailRepository,
+        encrypter,
+        tokenGenerator: makeTokenGeneratorWithError(),
       }),
       new AuthUseCase({
         loadUserByEmailRepository,
         encrypter,
-        tokenGenerator: makeTokenGeneratorWithError(),
+        tokenGenerator,
+        updateAccessTokenRepository: makeUpdateAccessTokenRepositoryWithError(),
       }),
     );
 
